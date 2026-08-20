@@ -2,7 +2,8 @@ services:
   vibehook:
     # Requires an externally managed Redis instance reachable via REDIS_ADDR.
     build: .
-    image: its-the-vibe/vibehook:local
+    image: ghcr.io/its-the-vibe/vibehook:latest
+    pull_policy: always
     env_file:
       - .env
     read_only: true
@@ -13,3 +14,7 @@ services:
     command: ["--config", "/app/config.yaml"]
     ports:
       - "8080:8080"
+    restart: on-failure:10
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+

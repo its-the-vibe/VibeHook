@@ -1,0 +1,14 @@
+services:
+  vibehook:
+    build: .
+    image: its-the-vibe/vibehook:local
+    env_file:
+      - .env
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml"]
+    ports:
+      - "8080:8080"

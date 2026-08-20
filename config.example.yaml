@@ -1,0 +1,5 @@
+listenAddress: ":8080"
+routes:
+  /webhook/github: github-events
+  /webhook/slack: slack-events
+  /webhook/custom: custom-webhook

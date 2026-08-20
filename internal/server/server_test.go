@@ -109,3 +109,51 @@ func TestPublishFailureReturnsBadGateway(t *testing.T) {
 		t.Fatalf("expected bad gateway status, got %d", res.Code)
 	}
 }
+
+func TestUnmappedRouteReturnsNotFound(t *testing.T) {
+	t.Parallel()
+
+	publisher := &fakePublisher{}
+	handler := New(
+		map[string]string{"/webhook/github": "github-events"},
+		publisher,
+		BasicAuthConfig{Enabled: false},
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook/unknown", strings.NewReader("{}"))
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, req)
+
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("expected not found status, got %d", res.Code)
+	}
+
+	if len(publisher.calls) != 0 {
+		t.Fatalf("expected no publish calls, got %d", len(publisher.calls))
+	}
+}
+
+func TestMappedRouteRejectsNonPostMethods(t *testing.T) {
+	t.Parallel()
+
+	publisher := &fakePublisher{}
+	handler := New(
+		map[string]string{"/webhook/github": "github-events"},
+		publisher,
+		BasicAuthConfig{Enabled: false},
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/webhook/github", nil)
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, req)
+
+	if res.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected method not allowed status, got %d", res.Code)
+	}
+
+	if len(publisher.calls) != 0 {
+		t.Fatalf("expected no publish calls, got %d", len(publisher.calls))
+	}
+}

@@ -30,3 +30,44 @@ func TestLoadParsesRoutesAndDefaultsAddress(t *testing.T) {
 		t.Fatalf("expected github-events channel, got %q", got)
 	}
 }
+
+func TestLoadValidationErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{
+			name:    "empty routes",
+			content: "routes: {}\n",
+		},
+		{
+			name: "route missing leading slash",
+			content: "routes:\n" +
+				"  webhook/github: github-events\n",
+		},
+		{
+			name: "empty channel",
+			content: "routes:\n" +
+				"  /webhook/github: \"\"\n",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			tmpDir := t.TempDir()
+			configPath := filepath.Join(tmpDir, "config.yaml")
+			if err := os.WriteFile(configPath, []byte(tc.content), 0o600); err != nil {
+				t.Fatalf("write config file: %v", err)
+			}
+
+			if _, err := Load(configPath); err == nil {
+				t.Fatalf("expected Load to fail for case %q", tc.name)
+			}
+		})
+	}
+}

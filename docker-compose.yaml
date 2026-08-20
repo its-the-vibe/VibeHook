@@ -1,5 +1,6 @@
 services:
   vibehook:
+    # Requires an externally managed Redis instance reachable via REDIS_ADDR.
     build: .
     image: its-the-vibe/vibehook:local
     env_file:

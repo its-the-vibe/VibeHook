@@ -33,12 +33,12 @@ func Load(path string) (Config, error) {
 		return Config{}, errors.New("routes must not be empty")
 	}
 
-	for path, channel := range cfg.Routes {
-		if !strings.HasPrefix(path, "/") {
-			return Config{}, fmt.Errorf("route %q must start with /", path)
+	for routePath, channel := range cfg.Routes {
+		if !strings.HasPrefix(routePath, "/") {
+			return Config{}, fmt.Errorf("route %q must start with /", routePath)
 		}
 		if channel == "" {
-			return Config{}, fmt.Errorf("route %q has empty channel", path)
+			return Config{}, fmt.Errorf("route %q has empty channel", routePath)
 		}
 	}
 

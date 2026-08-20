@@ -53,12 +53,12 @@ func webhookHandler(channel string, publisher Publisher, logger *slog.Logger) ht
 			return
 		}
 
+		defer r.Body.Close()
 		payload, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "failed to read body", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
 
 		if err := publisher.Publish(r.Context(), channel, payload); err != nil {
 			logger.Error("failed to publish payload", "channel", channel, "error", err)
@@ -73,7 +73,16 @@ func webhookHandler(channel string, publisher Publisher, logger *slog.Logger) ht
 func basicAuth(cfg BasicAuthConfig, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
-		if !ok || subtle.ConstantTimeCompare([]byte(username), []byte(cfg.Username)) != 1 || subtle.ConstantTimeCompare([]byte(password), []byte(cfg.Password)) != 1 {
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="vibehook"`)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		userMatch := subtle.ConstantTimeCompare([]byte(username), []byte(cfg.Username))
+		passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(cfg.Password))
+		authorized := userMatch&passwordMatch == 1
+		if !authorized {
 			w.Header().Set("WWW-Authenticate", `Basic realm="vibehook"`)
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return

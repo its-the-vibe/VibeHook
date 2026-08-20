@@ -69,6 +69,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		logger.Error("failed to connect to Redis", "error", err)
+		os.Exit(1)
+	}
+
 	if shutdownErr := httpServer.Shutdown(ctx); shutdownErr != nil {
 		logger.Error("shutdown failed", "error", shutdownErr)
 		os.Exit(1)

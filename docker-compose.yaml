@@ -13,7 +13,7 @@ services:
       - ./config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml"]
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     restart: on-failure:10
     extra_hosts:
       - "host.docker.internal:host-gateway"

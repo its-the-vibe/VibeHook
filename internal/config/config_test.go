@@ -25,6 +25,15 @@ func TestLoadParsesRoutesAndDefaultsAddress(t *testing.T) {
 	if cfg.ListenAddress != ":8080" {
 		t.Fatalf("expected default listen address ':8080', got %q", cfg.ListenAddress)
 	}
+	if cfg.RedisAddress != "localhost:6379" {
+		t.Fatalf("expected default redis address 'localhost:6379', got %q", cfg.RedisAddress)
+	}
+	if !cfg.BasicAuthEnabled {
+		t.Fatalf("expected basic auth to be enabled by default")
+	}
+	if cfg.BasicAuthUsername != "vibehook" {
+		t.Fatalf("expected default basic auth username 'vibehook', got %q", cfg.BasicAuthUsername)
+	}
 
 	if got := cfg.Routes["/webhook/github"]; got != "github-events" {
 		t.Fatalf("expected github-events channel, got %q", got)
@@ -51,6 +60,27 @@ func TestLoadValidationErrors(t *testing.T) {
 			name: "empty channel",
 			content: "routes:\n" +
 				"  /webhook/github: \"\"\n",
+		},
+		{
+			name: "empty redis address",
+			content: "redisAddress: \"\"\n" +
+				"basicAuthEnabled: false\n" +
+				"routes:\n" +
+				"  /webhook/github: github-events\n",
+		},
+		{
+			name: "negative redis db",
+			content: "redisDB: -1\n" +
+				"basicAuthEnabled: false\n" +
+				"routes:\n" +
+				"  /webhook/github: github-events\n",
+		},
+		{
+			name: "auth enabled without username",
+			content: "basicAuthEnabled: true\n" +
+				"basicAuthUsername: \"\"\n" +
+				"routes:\n" +
+				"  /webhook/github: github-events\n",
 		},
 	}
 

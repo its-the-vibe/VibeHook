@@ -21,7 +21,7 @@ VibeHook is a lightweight webhook consumer service written in Go. It listens on 
    cp .env.example .env
    ```
 
-2. Edit `config.yaml` with your route-to-channel mappings.
+2. Edit `config.yaml` with your route-to-channel mappings and non-sensitive runtime settings.
 3. Set secure values in `.env` for `REDIS_PASSWORD` and `BASIC_AUTH_PASSWORD`.
 4. Run locally:
 
@@ -37,6 +37,10 @@ VibeHook is a lightweight webhook consumer service written in Go. It listens on 
 
 ```yaml
 listenAddress: ":8080"
+redisAddress: "redis.example.internal:6379"
+redisDB: 0
+basicAuthEnabled: true
+basicAuthUsername: vibehook
 routes:
   /webhook/github: github-events
   /webhook/slack: slack-events
@@ -45,14 +49,10 @@ routes:
 
 ### `.env`
 
-Use environment variables for sensitive configuration.
+Use environment variables for sensitive configuration only.
 
 ```env
-REDIS_ADDR=redis.example.internal:6379
 REDIS_PASSWORD=replace-with-redis-password
-REDIS_DB=0
-BASIC_AUTH_ENABLED=true
-BASIC_AUTH_USERNAME=vibehook
 BASIC_AUTH_PASSWORD=replace-with-strong-password
 ```
 

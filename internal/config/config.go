@@ -10,8 +10,12 @@ import (
 )
 
 type Config struct {
-	ListenAddress string            `yaml:"listenAddress"`
-	Routes        map[string]string `yaml:"routes"`
+	ListenAddress     string            `yaml:"listenAddress"`
+	RedisAddress      string            `yaml:"redisAddress"`
+	RedisDB           int               `yaml:"redisDB"`
+	BasicAuthEnabled  bool              `yaml:"basicAuthEnabled"`
+	BasicAuthUsername string            `yaml:"basicAuthUsername"`
+	Routes            map[string]string `yaml:"routes"`
 }
 
 func Load(path string) (Config, error) {
@@ -20,13 +24,30 @@ func Load(path string) (Config, error) {
 		return Config{}, fmt.Errorf("read config: %w", err)
 	}
 
-	var cfg Config
+	cfg := Config{
+		ListenAddress:     ":8080",
+		RedisAddress:      "localhost:6379",
+		BasicAuthEnabled:  true,
+		BasicAuthUsername: "vibehook",
+	}
 	if err := yaml.Unmarshal(content, &cfg); err != nil {
 		return Config{}, fmt.Errorf("parse config: %w", err)
 	}
 
 	if cfg.ListenAddress == "" {
-		cfg.ListenAddress = ":8080"
+		return Config{}, errors.New("listenAddress must not be empty")
+	}
+
+	if cfg.RedisAddress == "" {
+		return Config{}, errors.New("redisAddress must not be empty")
+	}
+
+	if cfg.RedisDB < 0 {
+		return Config{}, errors.New("redisDB must be greater than or equal to 0")
+	}
+
+	if cfg.BasicAuthEnabled && cfg.BasicAuthUsername == "" {
+		return Config{}, errors.New("basicAuthUsername must not be empty when basicAuthEnabled is true")
 	}
 
 	if len(cfg.Routes) == 0 {

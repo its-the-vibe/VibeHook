@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -29,46 +28,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisDB := 0
-	if rawDB := os.Getenv("REDIS_DB"); rawDB != "" {
-		parsedDB, parseErr := strconv.Atoi(rawDB)
-		if parseErr != nil {
-			logger.Error("invalid REDIS_DB", "error", parseErr)
-			os.Exit(1)
-		}
-		redisDB = parsedDB
-	}
-
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "localhost:6379"
-	}
-
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
+		Addr:     cfg.RedisAddress,
 		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       redisDB,
+		DB:       cfg.RedisDB,
 	})
 	defer redisClient.Close()
 
-	authEnabled := true
-	if rawEnabled := os.Getenv("BASIC_AUTH_ENABLED"); rawEnabled != "" {
-		parsedEnabled, parseErr := strconv.ParseBool(rawEnabled)
-		if parseErr != nil {
-			logger.Error("invalid BASIC_AUTH_ENABLED", "error", parseErr)
-			os.Exit(1)
-		}
-		authEnabled = parsedEnabled
-	}
-
 	authCfg := server.BasicAuthConfig{
-		Enabled:  authEnabled,
-		Username: os.Getenv("BASIC_AUTH_USERNAME"),
+		Enabled:  cfg.BasicAuthEnabled,
+		Username: cfg.BasicAuthUsername,
 		Password: os.Getenv("BASIC_AUTH_PASSWORD"),
 	}
 
-	if authCfg.Enabled && (authCfg.Username == "" || authCfg.Password == "") {
-		logger.Error("basic auth is enabled but BASIC_AUTH_USERNAME or BASIC_AUTH_PASSWORD is empty")
+	if authCfg.Enabled && authCfg.Password == "" {
+		logger.Error("basic auth is enabled but BASIC_AUTH_PASSWORD is empty")
 		os.Exit(1)
 	}
 

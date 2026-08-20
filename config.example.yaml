@@ -1,4 +1,8 @@
 listenAddress: ":8080"
+redisAddress: "redis.example.internal:6379"
+redisDB: 0
+basicAuthEnabled: true
+basicAuthUsername: vibehook
 routes:
   /webhook/github: github-events
   /webhook/slack: slack-events
